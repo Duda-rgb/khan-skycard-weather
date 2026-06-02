@@ -1,4 +1,4 @@
-// khan-skycard.js – Sky Edition v2.4.2
+// khan-skycard.js – Sky Edition v2.4.3
 
 class KhanSkyCardEditor extends HTMLElement {
   constructor() {
@@ -876,7 +876,7 @@ class KhanSkyCard extends HTMLElement {
       charger_power: '',
       charger_soc: '',
       charger_eta: '',
-      charger_battery_capacity_wh: '',
+      charger_battery_capacity_wh: 0,
       sun: 'sun.sun',           // always auto-resolved; kept for YAML compat only
       weather_entity: 'weather.home',
       inverter_name: '',
@@ -989,7 +989,8 @@ class KhanSkyCard extends HTMLElement {
   _strVal(eid) {
     if (!eid) return '';
     const s = this._hass?.states?.[eid];
-    return s ? String(s.state).toLowerCase() : '';
+    if (!s) return '';
+    return String(s.state).toLowerCase().trim();
   }
 
   _socColor(p) { return p<=25?'#f85149':p<=50?'#f39c4b':p<=75?'#58a6ff':'#4CAF50'; }
@@ -2676,8 +2677,14 @@ class KhanSkyCard extends HTMLElement {
         // Fix #12: removed early return here � was silently skipping any code added after this block
       } else {
         evGroup.style.display = '';
-      const isChargingEV = chargerStateStr === 'charging';
-      const isCompleted = chargerStateStr === 'completed' || chargerStateStr === 'finished';
+      const isChargingEV = chargerStateStr === 'charging'
+                        || chargerStateStr === 'active'
+                        || chargerStateStr === 'occupied'
+                        || chargerStateStr.includes('charg');
+      const isCompleted = chargerStateStr === 'completed'
+                       || chargerStateStr === 'finished'
+                       || chargerStateStr === 'complete'
+                       || chargerStateStr === 'full';
       const evFlow = getEl('flowHomeEV');
       if (evFlow) {
         if (isChargingEV) {
