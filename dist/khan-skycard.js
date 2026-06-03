@@ -791,6 +791,10 @@ class KhanSkyCard extends HTMLElement {
     this._prevPvBlocksKey = '';
     this._prevSkyKey  = null;
     this._prevMoonPhase = -1;  // cache: rebuild SVG only when phase changes meaningfully
+    this._prevPvTier = -1;     // cache: wave rebuild only on tier boundary, not every watt change
+    this._prevPvWaveBx = -1;
+    this._prevPvWaveBy = -1;
+    this._pvSlot = 'A';         // double-buffer: A/B swap eliminates 1-frame gap on wave rebuild
     this._skySlot     = 'A';
     this.attachShadow({ mode: 'open' });
   }
@@ -1176,8 +1180,8 @@ class KhanSkyCard extends HTMLElement {
     const showPvExtra = !!(this.config._show_pv_extra);
     const iconPath = '/local/community/khan-skycard';    // icons served from HACS community folder
 
-    const pv3txt = showPvExtra ? `<text id="pv3FlowVal" x="425" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#ffe83c">-- W</text>` : '';
-    const pv4txt = showPvExtra ? `<text id="pv4FlowVal" x="465" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#ffe83c">-- W</text>` : '';
+    const pv3txt = showPvExtra ? `<text id="pv3FlowVal" x="450" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#ffe83c">-- W</text>` : '';
+    const pv4txt = showPvExtra ? `<text id="pv4FlowVal" x="500" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#ffe83c">-- W</text>` : '';
 
     // EV banner — styled to match the PV sun bubble (sharp bottom-left, pill shape, 60% transparent)
     const evtxt = ev ? `<g id="evGroup">
@@ -1375,7 +1379,8 @@ class KhanSkyCard extends HTMLElement {
         <g id="moonSvgInner" transform="scale(0.85)"></g>
       </g>
       <!-- PV animated flow wave (sun → house) -->
-      <g id="pvFlowGroup"></g>
+      <g id="pvFlowGroupA" opacity="1"></g>
+      <g id="pvFlowGroupB" opacity="0"></g>
       <!-- PV power bubble: sharp bottom-left, rounded top-left/top-right/bottom-right (r=13) -->
       <g id="pvBubbleGroup" opacity="0">
         <path id="pvBubbleBg"
@@ -1456,7 +1461,7 @@ class KhanSkyCard extends HTMLElement {
       <!-- PV col -->
       <text x="420" y="400" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.75)" letter-spacing="2.5" font-weight="570">PV</text>
       <text id="fcPvGenBelowVal" x="-999" y="-999" font-size="1" fill="none">-- kW</text>
-      <text id="fcPv1SubVal" x="${showPvExtra ? '355' : '370'}" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#e0e8f0">-- W</text>
+      <text id="fcPv1SubVal" x="${showPvExtra ? '350' : '370'}" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#e0e8f0">-- W</text>
       <text id="fcPv2SubVal" x="${showPvExtra ? '400' : '470'}" y="427" text-anchor="middle" font-size="11" font-weight="650" fill="#e0e8f0">-- W</text>
       ${pv3txt}${pv4txt}
 
@@ -1471,7 +1476,7 @@ class KhanSkyCard extends HTMLElement {
       `<div class="kfc-bars-row" style="margin-top:10px">
         <div class="kfc-bar-col">
           <span class="kfc-bar-lbl">&#x2014; PV</span>
-          <div class="kfc-bar-meter-wrap"><div id="pvBlocks" class="kfc-bar-meter"></div></div>
+          <div class="kfc-bar-meter-wrap"><div id="pvBlocks" class="kfc-bar-meter"><div id="pvSeg0" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg1" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg2" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg3" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg4" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg5" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg6" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg7" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg8" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg9" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg10" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg11" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg12" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg13" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg14" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg15" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div><div id="pvSeg16" class="kfc-pv-seg" style="background:rgba(255,255,255,0.07)"></div></div></div>
         </div>
         <div class="kfc-bar-col">
           <span class="kfc-bar-lbl">PWR</span>
@@ -2067,10 +2072,35 @@ class KhanSkyCard extends HTMLElement {
       if (moonSvgGroup) moonSvgGroup.setAttribute('opacity', '0');
     }
 
-    if (pvTotal !== this._prevPvTotal || sun.bx !== this._prevSunPos.bx || sun.by !== this._prevSunPos.by) {
-      this._prevPvTotal = pvTotal; this._prevSunPos = { bx: sun.bx, by: sun.by };
-      const pvGroup = getEl('pvFlowGroup');
-      if (pvGroup) pvGroup.innerHTML = this._buildPvWaveHTML(sun.bx, sun.by, pvTotal);
+    // PV wave: double-buffer A/B swap for zero-flicker rebuilds.
+    // Write new HTML into the hidden slot, then instantly swap opacity.
+    // The active slot keeps rendering continuously — zero frames with empty group.
+    // Rebuild only on tier boundary, geometry change, or on/off threshold.
+    const _pvTier = pvTotal <= 10 ? 0
+      : pvTotal < 200  ? 1 : pvTotal < 600  ? 2 : pvTotal < 1200 ? 3
+      : pvTotal < 2500 ? 4 : pvTotal < 4000 ? 5 : pvTotal < 6000 ? 6 : 7;
+    const _pvWaveNeedsRebuild = _pvTier !== this._prevPvTier
+      || sun.bx !== this._prevPvWaveBx
+      || sun.by !== this._prevPvWaveBy;
+    if (_pvWaveNeedsRebuild) {
+      this._prevPvTier   = _pvTier;
+      this._prevPvWaveBx = sun.bx;
+      this._prevPvWaveBy = sun.by;
+      this._prevPvTotal  = pvTotal;
+      this._prevSunPos   = { bx: sun.bx, by: sun.by };
+      // Determine which slot is currently visible and which is hidden
+      const activeSlot = this._pvSlot;          // currently shown
+      const nextSlot   = activeSlot === 'A' ? 'B' : 'A';  // write target
+      const nextGroup  = getEl('pvFlowGroup' + nextSlot);
+      const activeGroup = getEl('pvFlowGroup' + activeSlot);
+      if (nextGroup && activeGroup) {
+        // 1. Build into hidden slot (no visual effect)
+        nextGroup.innerHTML = this._buildPvWaveHTML(sun.bx, sun.by, pvTotal);
+        // 2. Swap: show next, hide active — atomic from browser compositor perspective
+        nextGroup.setAttribute('opacity', '1');
+        activeGroup.setAttribute('opacity', '0');
+        this._pvSlot = nextSlot;
+      }
     }
 
     // ── PV power bubble: floats just right of sun, shows live kW ──
@@ -2662,11 +2692,18 @@ class KhanSkyCard extends HTMLElement {
       _applyTileSize(_invRemKwhEl2, 'val_remaining_size');
     }
 
-    const pvBlocks = getEl('pvBlocks');
+    // pvBlocks: update each segment directly — no innerHTML wipe, no flicker
     const pvBlocksKey = pvTotal + '|' + pvMax;
-    if (pvBlocks && pvBlocksKey !== this._prevPvBlocksKey) {
+    if (pvBlocksKey !== this._prevPvBlocksKey) {
       this._prevPvBlocksKey = pvBlocksKey;
-      pvBlocks.innerHTML = this._buildPvBlocksHTML(pvTotal, pvMax);
+      const N = 17, max = Math.max(pvMax, 1);
+      const lit = Math.min(N, Math.max(0, Math.round((pvTotal / max) * N)));
+      const offCol = 'rgba(255,255,255,0.07)';
+      const onCol = lit <= 0 ? offCol : lit <= 7 ? '#3fb950' : lit <= 13 ? '#29b6f6' : '#ffe83c';
+      for (let _i = 0; _i < N; _i++) {
+        const seg = getEl('pvSeg' + _i);
+        if (seg) seg.style.background = _i < lit ? onCol : offCol;
+      }
     }
 
     // EV
