@@ -1974,9 +1974,13 @@ class KhanSkyCard extends HTMLElement {
     const battVolt2 = dual ? _n(this._val(this.config.battery2_voltage)) : 0;
     const mos2 = dual ? _n(this._val(this.config.battery2_mos)) : 0;
 
-    const chargerPower = _n(this._val(this.config.charger_power, true));
-    const chargerCurrent = _n(this._val(this.config.charger_current));
-    const chargerSoc = _n(this._val(this.config.charger_soc));
+    // Raw _val (nullable): null = entity missing/unavailable; 0 = entity present but idle.
+    const _chargerPowerRaw   = this._val(this.config.charger_power, true);
+    const _chargerCurrentRaw = this._val(this.config.charger_current);
+    const _chargerSocRaw     = this._val(this.config.charger_soc);
+    const chargerPower   = _n(_chargerPowerRaw);
+    const chargerCurrent = _n(_chargerCurrentRaw);
+    const chargerSoc     = _n(_chargerSocRaw);
     const chargerEtaSensor = this._val(this.config.charger_eta);
     const chargerBattCapWh = Number(this.config.charger_battery_capacity_wh) || 0;
     const chargerStateStr = this._strVal(this.config.charger_state);
@@ -2706,55 +2710,38 @@ class KhanSkyCard extends HTMLElement {
       }
     }
 
-    // EV
+    // EV — compute state regardless of DOM presence; update DOM only if elements exist
+    const isChargingEV = chargerPower > 10
+                      || chargerStateStr.includes('charg')
+                      || chargerStateStr === 'active'
+                      || chargerStateStr === 'occupied'
+                      || chargerStateStr === 'connected'
+                      || chargerStateStr === 'plugged_in'
+                      || chargerStateStr === 'waiting'
+                      || chargerStateStr === 'ready'
+                      || chargerStateStr === 'ev_connected';
+    const isCompleted  = chargerStateStr === 'completed'
+                      || chargerStateStr === 'finished'
+                      || chargerStateStr === 'complete'
+                      || chargerStateStr === 'full';
     const evGroup = getEl('evGroup');
     if (evGroup) {
-      if (!this.config._show_ev) {
-        evGroup.style.display = 'none';
-        // Fix #12: removed early return here � was silently skipping any code added after this block
-      } else {
-        evGroup.style.display = '';
-      const isChargingEV = chargerStateStr === 'charging'
-                        || chargerStateStr === 'active'
-                        || chargerStateStr === 'occupied'
-                        || chargerStateStr.includes('charg');
-      const isCompleted = chargerStateStr === 'completed'
-                       || chargerStateStr === 'finished'
-                       || chargerStateStr === 'complete'
-                       || chargerStateStr === 'full';
+      evGroup.style.display = this.config._show_ev ? '' : 'none';
       const evFlow = getEl('flowHomeEV');
-      if (evFlow) {
-        if (isChargingEV) {
-          evFlow.setAttribute('opacity', '0.9'); evFlow.setAttribute('stroke', '#00aaff');
-        } else if (isCompleted) {
-          evFlow.setAttribute('opacity', '0');
-        } else {
-          evFlow.setAttribute('opacity', '0');
+      if (evFlow) evFlow.setAttribute('opacity', isChargingEV ? '0.9' : '0');
+      // Show value if entity is configured and readable (even 0). '--' only if entity absent.
+      setText('evPowerVal',   _chargerPowerRaw   !== null ? chargerPower.toFixed(0)   + ' W' : '-- W');
+      setText('evCurrentVal', _chargerCurrentRaw !== null ? chargerCurrent.toFixed(1) + ' A' : '-- A');
+      setText('evSocVal',     _chargerSocRaw     !== null ? chargerSoc.toFixed(0)     + ' %' : '-- %');
+      let evEta = isCompleted ? 'Full' : '--';
+      if (isChargingEV) {
+        if (chargerEtaSensor !== null && !isNaN(chargerEtaSensor)) {
+          evEta = this._fmtTime(chargerEtaSensor / 60);
+        } else if (chargerBattCapWh && chargerSoc > 0 && chargerPower > 0) {
+          evEta = this._fmtTime(chargerBattCapWh * (100 - chargerSoc) / 100 / chargerPower);
         }
       }
-      if (isChargingEV || isCompleted) {
-        setText('evPowerVal', chargerPower.toFixed(0) + ' W');
-        setText('evCurrentVal', chargerCurrent.toFixed(1) + ' A');
-        setText('evSocVal', chargerSoc.toFixed(0) + ' %');
-        let evEta = '--';
-        if (isChargingEV) {
-          if (chargerEtaSensor !== null && !isNaN(chargerEtaSensor)) evEta = this._fmtTime(chargerEtaSensor / 60);
-          else if (chargerBattCapWh && chargerSoc > 0 && chargerPower > 0) {
-            const remainingWh = chargerBattCapWh * (100 - chargerSoc) / 100;
-            const hours = remainingWh / chargerPower;
-            evEta = this._fmtTime(hours);
-          }
-        } else if (isCompleted) {
-          evEta = 'Full';
-        }
-        setText('evEtaVal', evEta);
-      } else {
-        setText('evPowerVal', '-- W');
-        setText('evCurrentVal', '-- A');
-        setText('evSocVal', '-- %');
-        setText('evEtaVal', '--');
-      }
-      } // end else (_show_ev)
+      setText('evEtaVal', evEta);
     }
 
     // ── Extra Tiles dynamic update ──
