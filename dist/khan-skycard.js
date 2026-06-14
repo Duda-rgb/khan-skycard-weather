@@ -1,4 +1,4 @@
-// khan-skycard.js – Sky Edition v2.4.3
+// khan-skycard.js – Sky Edition v2.5.0
 
 class KhanSkyCardEditor extends HTMLElement {
   constructor() {
@@ -56,13 +56,18 @@ class KhanSkyCardEditor extends HTMLElement {
         key === '_show_pv_extra'         || key === '_show_ev'              ||
         key === '_show_3phase'           || key === 'battery_cap_unit'      ||
         key === '_labels_custom_entities'|| key === '_show_extra_tiles'     ||
+        key === '_show_inv_banner'       ||
         key === 'label_cell_temp_minmax' || key === 'label_bms_temp'        ||
-        key === 'label_min_cell'         || key === 'label_max_cell'        ||
-        key === 'label_pv_voltage'       || key === 'label_remaining'       ||
-        key === 'label_endurance'        ||
+        key === 'label_cell_volt'        || key === 'label_pv_voltage'      ||
+        key === 'label_remaining'        || key === 'label_endurance'       ||
+        key === 'label_today_pv'         || key === 'label_chg_dis'         ||
+        key === 'label_grid_import'      || key === 'label_grid_export'     ||
+        key === 'label_today_load'       ||
         key === 'label_entity_cell_temp' || key === 'label_entity_bms_temp' ||
-        key === 'label_entity_min_cell'  || key === 'label_entity_max_cell' ||
-        key === 'label_entity_pv_voltage'|| key === 'label_entity_remaining'||
+        key === 'label_entity_cell_volt' || key === 'label_entity_pv_voltage' ||
+        key === 'label_entity_remaining' || key === 'label_entity_today_load' ||
+        key === 'label_entity_today_pv'  || key === 'label_entity_chg_dis'  ||
+        key === 'label_entity_grid_import'|| key === 'label_entity_grid_export' ||
         key === 'grid_import_today'      ||
         key.startsWith('_extra_tile_'))
       this._render();
@@ -473,15 +478,16 @@ class KhanSkyCardEditor extends HTMLElement {
     const _labelLocked  = (textKey, def, entityKey) => _labelChanged(textKey, def) && !!(cfg[entityKey]);
     const cellTempActive   = _labelChanged('label_cell_temp_minmax', 'CELL TEMP');
     const bmsTempActive    = _labelChanged('label_bms_temp',         'BMS TEMP');
-    const minCellActive    = _labelChanged('label_min_cell',         'Min Cell');
-    const maxCellActive    = _labelChanged('label_max_cell',         'Max Cell');
+    const cellVoltActive   = _labelChanged('label_cell_volt',        'CELL VOLT');
+    const minCellActive    = cellVoltActive; // alias for battery section lock
+    const maxCellActive    = cellVoltActive; // alias for battery section lock
     const pvVoltActive     = _labelChanged('label_pv_voltage',       'PV VOLTAGE');
     const remainActive     = _labelChanged('label_remaining',        'REMAINING');
     // Lock flags for Battery section pickers (stricter — requires entity also set)
     const cellTempLocked   = _labelLocked('label_cell_temp_minmax', 'CELL TEMP',   'label_entity_cell_temp');
     const bmsTempLocked    = _labelLocked('label_bms_temp',         'BMS TEMP',    'label_entity_bms_temp');
-    const minCellLocked    = _labelLocked('label_min_cell',         'Min Cell',    'label_entity_min_cell');
-    const maxCellLocked    = _labelLocked('label_max_cell',         'Max Cell',    'label_entity_max_cell');
+    const minCellLocked    = _labelLocked('label_cell_volt',        'CELL VOLT',   'label_entity_cell_volt');
+    const maxCellLocked    = minCellLocked; // both use same new key
     const pvVoltLocked     = _labelLocked('label_pv_voltage',       'PV VOLTAGE',  'label_entity_pv_voltage');
     const remainLocked     = _labelLocked('label_remaining',        'REMAINING',   'label_entity_remaining');
 
@@ -564,12 +570,15 @@ class KhanSkyCardEditor extends HTMLElement {
       divider(),
       picker('grid_active_power',  'Grid Active Power'),
       picker('grid_voltage',       'Grid Voltage', true),
-      picker('grid_import_today',  'Grid Import Today (kWh)', true),
       divider(),
       makeSection('grid3phase', '⚡', '3-Phase Breakdown', [
         picker('grid_phase_a', 'Phase L1 Power', true),
         picker('grid_phase_b', 'Phase L2 Power', true),
         picker('grid_phase_c', 'Phase L3 Power', true),
+        divider(),
+        picker('grid_phase_a_volt', 'Phase L1 Voltage', true),
+        picker('grid_phase_b_volt', 'Phase L2 Voltage', true),
+        picker('grid_phase_c_volt', 'Phase L3 Voltage', true),
       ], { toggleKey: '_show_3phase', toggleOn: show3Phase, hidden: !show3Phase }),
     ]));
 
@@ -586,7 +595,6 @@ class KhanSkyCardEditor extends HTMLElement {
         pickerMaybeDisabled('battery_mos',      'BMS Temp',         bmsTempLocked),
         pickerMaybeDisabled('battery_min_cell', 'Min Cell Voltage', minCellLocked),
         pickerMaybeDisabled('battery_max_cell', 'Max Cell Voltage', maxCellLocked),
-        picker('batt_dis', 'Discharge Today', true),
         divider(),
         picker('goodwe_battery_soc',  'Fallback SOC',     true),
         picker('goodwe_battery_curr', 'Fallback Current', true),
@@ -605,15 +613,16 @@ class KhanSkyCardEditor extends HTMLElement {
     ]));
 
     shell.appendChild(makeSection('inverter', '🔄', 'Inverter', [
+      switchRow('_show_inv_banner', '📛 Show Inverter Banner', 'Shows the INV temp/load badge in the flow diagram'),
+      divider(),
       picker('inv_temp',   'Inverter Temp'),
       picker('consump',    'House Consumption'),
       picker('batt_dis',   'Battery Discharge Today', true),
-    ]));
-
-    shell.appendChild(makeSection('solar_extras', '📊', 'Solar Extras', [
-      picker('today_pv',       'Today PV Gen'),
+      divider(),
+      picker('today_pv',       'Today PV Generation'),
       picker('today_batt_chg', 'Today Batt Charge'),
-      picker('today_load',     'Today Load'),
+      picker('grid_import_today', 'Grid Import Today (kWh)', true),
+      picker('grid_export_today', 'Grid Export Today (kWh)', true),
     ]));
 
     shell.appendChild(makeSection('ev', '🚗', 'EV / Car Charger', [
@@ -632,12 +641,12 @@ class KhanSkyCardEditor extends HTMLElement {
     const builtInTileRows = [];
 
     const builtInTiles = [
-      { id: 'cell_temp',  label: 'Cell Temp',  textKey: 'label_cell_temp_minmax', def: 'CELL TEMP',  entityKey: 'label_entity_cell_temp',  active: cellTempActive },
-      { id: 'bms_temp',   label: 'BMS Temp',   textKey: 'label_bms_temp',         def: 'BMS TEMP',   entityKey: 'label_entity_bms_temp',   active: bmsTempActive  },
-      { id: 'pv_voltage', label: 'PV Voltage', textKey: 'label_pv_voltage',       def: 'PV VOLTAGE', entityKey: 'label_entity_pv_voltage', active: pvVoltActive   },
-      { id: 'min_cell',   label: 'Min Cell',   textKey: 'label_min_cell',         def: 'Min Cell',   entityKey: 'label_entity_min_cell',   active: minCellActive  },
-      { id: 'max_cell',   label: 'Max Cell',   textKey: 'label_max_cell',         def: 'Max Cell',   entityKey: 'label_entity_max_cell',   active: maxCellActive  },
-      { id: 'remaining',  label: 'Remaining',  textKey: 'label_remaining',        def: 'REMAINING',  entityKey: 'label_entity_remaining',  active: remainActive   },
+      { id: 'cell_temp',   label: 'Cell Temp',   textKey: 'label_cell_temp_minmax', def: 'CELL TEMP',   entityKey: 'label_entity_cell_temp',   active: cellTempActive },
+      { id: 'bms_temp',    label: 'BMS Temp',    textKey: 'label_bms_temp',         def: 'BMS TEMP',    entityKey: 'label_entity_bms_temp',    active: bmsTempActive  },
+      { id: 'pv_voltage',  label: 'PV Voltage',  textKey: 'label_pv_voltage',       def: 'PV VOLTAGE',  entityKey: 'label_entity_pv_voltage',  active: pvVoltActive   },
+      { id: 'cell_volt',   label: 'Cell Volt',   textKey: 'label_cell_volt',        def: 'CELL VOLT',   entityKey: 'label_entity_cell_volt',   active: minCellActive && maxCellActive },
+      { id: 'remaining',   label: 'Remaining',   textKey: 'label_remaining',        def: 'REMAINING',   entityKey: 'label_entity_remaining',   active: remainActive   },
+      { id: 'today_load',  label: 'Today Load',  textKey: 'label_today_load',       def: 'TODAY LOAD',  entityKey: 'label_entity_today_load',  active: _labelChanged('label_today_load', 'TODAY LOAD') },
     ];
 
     builtInTiles.forEach(tile => {
@@ -649,6 +658,26 @@ class KhanSkyCardEditor extends HTMLElement {
         {}
       );
       builtInTileRows.push(tileSection);
+    });
+
+    // ── 4 Inverter tile customization rows ──
+    const inverterTiles = [
+      { id: 'today_pv',     label: 'Today PV',     textKey: 'label_today_pv',     def: 'TODAY PV',     entityKey: 'label_entity_today_pv',     active: _labelChanged('label_today_pv',     'TODAY PV')     },
+      { id: 'chg_dis',      label: 'Chg / Dis',    textKey: 'label_chg_dis',      def: 'CHG / DIS',    entityKey: 'label_entity_chg_dis',      active: _labelChanged('label_chg_dis',      'CHG / DIS')    },
+      { id: 'grid_import',  label: 'Grid Import',  textKey: 'label_grid_import',  def: 'GRID IMPORT',  entityKey: 'label_entity_grid_import',  active: _labelChanged('label_grid_import',  'GRID IMPORT')  },
+      { id: 'grid_export',  label: 'Grid Export',  textKey: 'label_grid_export',  def: 'GRID EXPORT',  entityKey: 'label_entity_grid_export',  active: _labelChanged('label_grid_export',  'GRID EXPORT')  },
+    ];
+
+    const inverterTileRows = [];
+    inverterTiles.forEach(tile => {
+      const tileSection = makeSection(
+        `tile_inv_${tile.id}`,
+        '📊',
+        tile.label,
+        [ labelRow(tile.textKey, tile.label + ' label', tile.def, tile.entityKey, tile.active) ],
+        {}
+      );
+      inverterTileRows.push(tileSection);
     });
 
     // Build extra tile dropdowns
@@ -712,9 +741,16 @@ class KhanSkyCardEditor extends HTMLElement {
       { toggleKey: '_show_extra_tiles', toggleOn: extraTilesEnabled, hidden: !extraTilesEnabled }
     );
 
+    // Build inverter tiles subsection
+    const inverterTilesSubSection = makeSection('inv_tiles', '🔄', 'Inverter Tiles (4)',
+      inverterTileRows, {}
+    );
+
     shell.appendChild(makeSection('customize', '🎨', 'Add or Customize Tiles', [
       labelInfoBanner,
       ...builtInTileRows,
+      divider(),
+      inverterTilesSubSection,
       divider(),
       extraTilesSubSection,
     ], { toggleKey: '_labels_custom_entities', toggleOn: labelsEnabled, hidden: !labelsEnabled }));
@@ -733,14 +769,13 @@ class KhanSkyCardEditor extends HTMLElement {
         const tiles = [
           ['label_cell_temp_size',  'Cell Temp Label'],    ['val_cell_temp_size',   'Cell Temp Value'],
           ['label_bms_temp_size',   'BMS Temp Label'],     ['val_bms_temp_size',    'BMS Temp Value'],
-          ['label_min_cell_size',   'Min Cell Label'],     ['val_min_cell_size',    'Min Cell Value'],
-          ['label_max_cell_size',   'Max Cell Label'],     ['val_max_cell_size',    'Max Cell Value'],
+          ['label_cell_volt_size',  'Cell Volt Label'],    ['val_cell_volt_size',   'Cell Volt Value'],
           ['label_remaining_size',  'Remaining Label'],    ['val_remaining_size',   'Remaining Value'],
+          ['label_today_load_size', 'Today Load Label'],   ['val_today_load_size',  'Today Load Value'],
           ['label_grid_import_size','Grid Import Label'],  ['val_grid_import_size', 'Grid Import Value'],
           ['label_endurance_size',  'Endurance Label'],    ['val_endurance_size',   'Endurance Value'],
           ['label_today_pv_size',   'Today PV Label'],     ['val_today_pv_size',    'Today PV Value'],
           ['label_chg_dis_size',    'Chg / Dis Label'],    ['val_chg_dis_size',     'Chg / Dis Value'],
-          ['label_today_load_size', 'Today Load Label'],   ['val_today_load_size',  'Today Load Value'],
         ];
         tiles.forEach(([key, label]) => grid.appendChild(numberField(key, label, 0, 3.0, 0.01, 'rem')));
         return grid;
@@ -843,8 +878,6 @@ class KhanSkyCard extends HTMLElement {
       pv4_power: '',
       pv_total_power: 'sensor.goodwe_pv_power',
       grid_active_power: 'sensor.goodwe_active_power',
-      grid_import_energy: 'sensor.goodwe_today_energy_import',
-      grid_export_energy: '',
       consump: 'sensor.goodwe_house_consumption',
       today_pv: 'sensor.goodwe_today_s_pv_generation',
       today_batt_chg: 'sensor.goodwe_today_battery_charge',
@@ -887,16 +920,26 @@ class KhanSkyCard extends HTMLElement {
       label_cell_temp_minmax: 'CELL TEMP',
       label_bms_temp: 'BMS TEMP',
       label_endurance: 'ENDURANCE',
-      label_min_cell: 'Min Cell',
-      label_max_cell: 'Max Cell',
+      label_cell_volt: 'CELL VOLT',
       label_remaining: 'REMAINING',
       label_pv_voltage: 'PV VOLTAGE',
+      label_today_pv: 'TODAY PV',
+      label_chg_dis: 'CHG / DIS',
+      label_grid_import: 'GRID IMPORT',
+      label_grid_export: 'GRID EXPORT',
+      label_today_load: 'TODAY LOAD',
+      // Custom entity overrides for 6 stat tiles
       label_entity_cell_temp: '',
       label_entity_bms_temp: '',
-      label_entity_min_cell: '',
-      label_entity_max_cell: '',
+      label_entity_cell_volt: '',
       label_entity_pv_voltage: '',
       label_entity_remaining: '',
+      label_entity_today_load: '',
+      // Custom entity overrides for 4 inverter tiles
+      label_entity_today_pv: '',
+      label_entity_chg_dis: '',
+      label_entity_grid_import: '',
+      label_entity_grid_export: '',
       _labels_custom_entities: false,
       // PV voltage entities
       pv1_voltage: 'sensor.goodwe_pv1_voltage',
@@ -905,11 +948,17 @@ class KhanSkyCard extends HTMLElement {
       pv4_voltage: '',
       // Grid import today
       grid_import_today: 'sensor.goodwe_today_energy_import',
+      grid_export_today: '',
       grid_power_alt: 'sensor.grid_phase_a_power',
+      grid_voltage: '',
       _show_3phase: false,
       grid_phase_a: '',
       grid_phase_b: '',
       grid_phase_c: '',
+      grid_phase_a_volt: '',
+      grid_phase_b_volt: '',
+      grid_phase_c_volt: '',
+      _show_inv_banner: true,
       _show_battery: true,
       _show_battery2: false,
       invert_battery_power: false,
@@ -919,14 +968,13 @@ class KhanSkyCard extends HTMLElement {
       // Per-tile sizes (0 = use global/CSS default)
       label_cell_temp_size: 0,     val_cell_temp_size: 0,
       label_bms_temp_size: 0,      val_bms_temp_size: 0,
-      label_min_cell_size: 0,      val_min_cell_size: 0,
-      label_max_cell_size: 0,      val_max_cell_size: 0,
+      label_cell_volt_size: 0,     val_cell_volt_size: 0,
       label_remaining_size: 0,     val_remaining_size: 0,
+      label_today_load_size: 0,    val_today_load_size: 0,
       label_grid_import_size: 0,   val_grid_import_size: 0,
       label_endurance_size: 0,     val_endurance_size: 0,
       label_today_pv_size: 0,      val_today_pv_size: 0,
       label_chg_dis_size: 0,       val_chg_dis_size: 0,
-      label_today_load_size: 0,    val_today_load_size: 0,
       // Extra Tiles (6 customizable)
       _show_extra_tiles: false,
       _extra_tile_1_enabled: false, _extra_tile_1_label: '', _extra_tile_1_entity: '', _extra_tile_1_icon: '⚡', _extra_tile_1_label_size: 0, _extra_tile_1_value_size: 0,
@@ -956,9 +1004,11 @@ class KhanSkyCard extends HTMLElement {
     // Entity-only changes must NOT rebuild — that causes HA "configuration error" flash.
     const STRUCTURAL_KEYS = [
       '_show_battery','_show_battery2','_show_pv_extra','_show_ev','_show_3phase',
-      '_show_extra_tiles','battery_cap_unit',
-      'label_cell_temp_minmax','label_bms_temp','label_min_cell','label_max_cell',
+      '_show_extra_tiles','battery_cap_unit','_show_inv_banner',
+      'label_cell_temp_minmax','label_bms_temp','label_cell_volt',
       'label_pv_voltage','label_remaining','label_endurance',
+      'label_today_pv','label_chg_dis','label_grid_import','label_grid_export','label_today_load',
+      'label_entity_cell_temp','label_entity_cell_volt',
       'inverter_name',
     ];
     // Extra tile label/icon/enable/size keys are baked into innerHTML — treat as structural.
@@ -1191,20 +1241,20 @@ class KhanSkyCard extends HTMLElement {
       </path>
       <!-- EV banner — matches PV bubble style: sharp bottom-left, rounded other corners, 60% transparent -->
       <g id="evBannerGroup" opacity="1">
-        <path d="M 308,390 L 308,375 A 11,11 0 0,1 319,364 L 408,364 A 11,11 0 0,1 419,375 L 419,377 A 11,11 0 0,1 408,388 L 320,388 L 308,390 Z"
+        <path d="M 308,395 L 308,380 A 11,11 0 0,1 319,369 L 408,369 A 11,11 0 0,1 419,380 L 419,382 A 11,11 0 0,1 408,393 L 320,393 L 308,395 Z"
               fill="rgba(0,0,0,0.60)" stroke="rgba(0,170,255,0.50)" stroke-width="1.2"/>
         <!-- W label + value -->
-        <text x="330" y="374" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">W</text>
-        <text id="evPowerVal"   x="330" y="384" text-anchor="middle" font-size="9.5" font-weight="650" fill="#00aaff">-- W</text>
+        <text x="330" y="379" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">W</text>
+        <text id="evPowerVal"   x="330" y="389" text-anchor="middle" font-size="9.5" font-weight="650" fill="#00aaff">-- W</text>
         <!-- A label + value -->
-        <text x="358" y="374" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">A</text>
-        <text id="evCurrentVal" x="358" y="384" text-anchor="middle" font-size="9.5" font-weight="600" fill="#88ccff">-- A</text>
+        <text x="358" y="379" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">A</text>
+        <text id="evCurrentVal" x="358" y="389" text-anchor="middle" font-size="9.5" font-weight="600" fill="#88ccff">-- A</text>
         <!-- SOC label + value -->
-        <text x="385" y="374" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">SOC</text>
-        <text id="evSocVal"     x="385" y="384" text-anchor="middle" font-size="9.5" font-weight="650" fill="#4ade80">-- %</text>
+        <text x="385" y="379" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">SOC</text>
+        <text id="evSocVal"     x="385" y="389" text-anchor="middle" font-size="9.5" font-weight="650" fill="#4ade80">-- %</text>
         <!-- ETA label + value -->
-        <text x="410" y="374" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">ETA</text>
-        <text id="evEtaVal"     x="410" y="384" text-anchor="middle" font-size="9" font-weight="600" fill="#4ade80">--</text>
+        <text x="410" y="379" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.50)" letter-spacing="0.8">ETA</text>
+        <text id="evEtaVal"     x="410" y="389" text-anchor="middle" font-size="9" font-weight="600" fill="#4ade80">--</text>
       </g>
     </g>` : '';
 
@@ -1278,8 +1328,8 @@ class KhanSkyCard extends HTMLElement {
       .kfc-bar-meter-wrap{flex:1 1 0;min-width:0;display:flex;align-items:center}
       .kfc-bar-pwr-slot{flex:1 1 0;min-width:0;position:relative;display:flex;align-items:center}
       .kfc-bar-pwr-slot .kfc-bar-meter-wrap{flex:1 1 0;width:100%;min-width:0}
-      .kfc-bar-meter{width:90%;height:8px;flex:0 0 auto;display:flex;gap:2px;align-items:stretch;box-sizing:border-box}
-      .kfc-bar-meter-pwr{position:relative;gap:0;height:8px;background:rgba(5,10,25,0.97);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)}
+      .kfc-bar-meter{width:90%;height:16px;flex:0 0 auto;display:flex;gap:2px;align-items:stretch;box-sizing:border-box}
+      .kfc-bar-meter-pwr{position:relative;gap:0;height:16px;background:rgba(5,10,25,0.97);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)}
       .kfc-pv-seg{flex:1 1 0;min-width:0;height:100%;border-radius:2px}
       .kfc-pwr-fill-area{position:absolute;left:0;top:0;bottom:0;right:0;overflow:hidden;border-radius:2px}
       #pwrBar{position:absolute;top:0;left:0;bottom:0;width:0%;height:100%;border-radius:2px;transition:width .4s ease,background .4s ease}
@@ -1393,17 +1443,6 @@ class KhanSkyCard extends HTMLElement {
       <!-- ↓ lowerSection: translate Y only — arc above is untouched -->
       <g id="lowerSection" transform="translate(0,0)">
 
-
-      <!-- L1/L2/L3 — vertical stack on left edge, inline with flow bar start from pole -->
-      <g id="grid3PhaseVertical" display="none">
-        <text x="7" y="280" font-size="7.5" fill="rgba(255,255,255,0.50)" letter-spacing="0.5">L1</text>
-        <text id="fcGridL1Val" x="7" y="290" font-size="9.5" font-weight="600" fill="#e0e8f0">-- W</text>
-        <text x="7" y="300" font-size="7.5" fill="rgba(255,255,255,0.50)" letter-spacing="0.5">L2</text>
-        <text id="fcGridL2Val" x="7" y="310" font-size="9.5" font-weight="600" fill="#e0e8f0">-- W</text>
-        <text x="7" y="320" font-size="7.5" fill="rgba(255,255,255,0.50)" letter-spacing="0.5">L3</text>
-        <text id="fcGridL3Val" x="7" y="330" font-size="9.5" font-weight="600" fill="#e0e8f0">-- W</text>
-      </g>
-
       <!-- GRID IN (importing, cyan): grid → house -->
       <path id="flowGridIn"  d="M 81,327 H 167 V 339 H 195" fill="none" stroke="rgba(0,240,255,0.28)" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" opacity="0" style="display:none"><animate attributeName="stroke-dashoffset" from="11" to="0" dur="0.8s" repeatCount="indefinite" calcMode="linear"/></path>
       <path id="flowGridInC" d="M 81,327 H 167 V 339 H 195" fill="none" stroke="#00f0ff" stroke-width="1.5" stroke-dasharray="6 5" stroke-linecap="round" opacity="0" style="display:none" marker-end="url(#arrowCyan)"><animate attributeName="stroke-dashoffset" from="11" to="0" dur="0.8s" repeatCount="indefinite" calcMode="linear"/></path>
@@ -1432,10 +1471,12 @@ class KhanSkyCard extends HTMLElement {
 
 
       <!-- ── TINY INV BADGE − temp + load% ── -->
-      <rect id="fcInvRect" x="186" y="302" width="88" height="34" rx="10" fill="rgba(8,14,28,0.60)" stroke="rgba(244,169,59,0.65)" stroke-width="1.2"/>
-      <text id="invNameLabel" x="234" y="315" text-anchor="middle" font-size="8" font-weight="650" fill="#f4a93b" letter-spacing="1.5">INV</text>
-      <text id="invTempFlow" x="210" y="330" text-anchor="middle" font-size="9.5" font-weight="600" fill="#e0e8f0">-- °C</text>
-      <text id="invLoadPctFlow" x="258" y="330" text-anchor="middle" font-size="9.5" font-weight="600" fill="#e0e8f0">--%</text>
+      <g id="fcInvBannerGroup" display="${this.config._show_inv_banner === false ? 'none' : ''}">
+      <rect id="fcInvRect" x="156" y="222" width="88" height="34" rx="10" fill="rgba(8,14,28,0.60)" stroke="rgba(244,169,59,0.65)" stroke-width="1.2"/>
+      <text id="invNameLabel" x="204" y="235" text-anchor="middle" font-size="8" font-weight="650" fill="#f4a93b" letter-spacing="1.5">INV</text>
+      <text id="invTempFlow" x="180" y="250" text-anchor="middle" font-size="9.5" font-weight="600" fill="#e0e8f0">-- °C</text>
+      <text id="invLoadPctFlow" x="228" y="250" text-anchor="middle" font-size="9.5" font-weight="600" fill="#e0e8f0">--%</text>
+      </g>
 
 
 
@@ -1449,10 +1490,27 @@ class KhanSkyCard extends HTMLElement {
       <line x1="182" y1="405" x2="182" y2="430" stroke="rgba(255,255,255,0.13)" stroke-width="1"/>
       <line x1="327" y1="405" x2="327" y2="430" stroke="rgba(255,255,255,0.13)" stroke-width="1"/>
 
-      <!-- GRID col -->
+      <!-- GRID col — single power+volt by default; L1/L2/L3 sub-values when 3-phase enabled -->
       <text x="75" y="400" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.75)" letter-spacing="1.5" font-weight="570">GRID</text>
-      <text id="fcGridVoltVal" x="100" y="427" text-anchor="right" font-size="9" font-weight="500" fill="rgba(180,190,210,0.35)" opacity="1"> -- V</text>
-      <text id="fcGridVal" x="45" y="427" text-anchor="middle" font-size="13" font-weight="650" fill="#e0e8f0">0 W</text>
+      <!-- Default: single total power value -->
+      <text id="fcGridVal" x="75" y="416" text-anchor="middle" font-size="13" font-weight="650" fill="#e0e8f0">0 W</text>
+      <!-- Default: single grid voltage below power -->
+      <text id="fcGridVoltVal" x="75" y="429" text-anchor="middle" font-size="8" font-weight="400" fill="rgba(180,200,230,0.45)">-- V</text>
+      <!-- 3-phase sub-row: L1 | L2 | L3 — hidden by default, shown when _show_3phase enabled -->
+      <g id="grid3PhaseVertical" display="none">
+        <!-- L1 -->
+        <text x="28"  y="409" font-size="6.5" fill="rgba(255,255,255,0.40)" letter-spacing="0.3" text-anchor="middle">L1</text>
+        <text id="fcGridL1Val"     x="28"  y="420" font-size="8.5" font-weight="650" fill="#e0e8f0" text-anchor="middle">-- W</text>
+        <text id="fcGridL1VoltVal" x="28"  y="430" font-size="6.5" font-weight="400" fill="rgba(180,200,230,0.45)" text-anchor="middle">-- V</text>
+        <!-- L2 -->
+        <text x="75"  y="409" font-size="6.5" fill="rgba(255,255,255,0.40)" letter-spacing="0.3" text-anchor="middle">L2</text>
+        <text id="fcGridL2Val"     x="75"  y="420" font-size="8.5" font-weight="650" fill="#e0e8f0" text-anchor="middle">-- W</text>
+        <text id="fcGridL2VoltVal" x="75"  y="430" font-size="6.5" font-weight="400" fill="rgba(180,200,230,0.45)" text-anchor="middle">-- V</text>
+        <!-- L3 -->
+        <text x="122" y="409" font-size="6.5" fill="rgba(255,255,255,0.40)" letter-spacing="0.3" text-anchor="middle">L3</text>
+        <text id="fcGridL3Val"     x="122" y="420" font-size="8.5" font-weight="650" fill="#e0e8f0" text-anchor="middle">-- W</text>
+        <text id="fcGridL3VoltVal" x="122" y="430" font-size="6.5" font-weight="400" fill="rgba(180,200,230,0.45)" text-anchor="middle">-- V</text>
+      </g>
 
       <!-- LOAD col -->
       <text x="254" y="400" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.75)" letter-spacing="1.5" font-weight="570">LOAD</text>
@@ -1494,12 +1552,22 @@ class KhanSkyCard extends HTMLElement {
       <!-- Row 1: CELL TEMP | BMS TEMP | PV VOLTAGE -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px">
         <div class="st">
-          <div style="display:flex;align-items:center;gap:7px">
-            <span style="font-size:1.0rem;line-height:1;flex-shrink:0;color:#ffffff">⟳</span>
-            <div style="min-width:0">
-              <div class="l">${this.config.label_cell_temp_minmax||'CELL TEMP'}</div>
-              <div class="v" id="bTemp1" style="color:#e0e8f0">--</div>
-            </div>
+          <div style="min-width:0;width:100%">
+            <div class="l">${this.config.label_cell_temp_minmax||'CELL TEMP'}</div>
+            ${(this.config._labels_custom_entities && this.config.label_entity_cell_temp) ? `
+            <div class="v" id="bTemp1" style="color:#e0e8f0;margin-top:4px">--</div>
+            <span id="bTemp1b" style="display:none"></span>` : `
+            <div style="display:flex;justify-content:space-evenly;align-items:center;width:100%;margin-top:2px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+                <span style="font-size:.55rem;color:rgba(200,215,235,0.50);letter-spacing:1px;text-transform:uppercase">T1</span>
+                <span id="bTemp1" style="font-size:.85rem;font-weight:650;color:#e0e8f0">--</span>
+              </div>
+              <div style="width:1px;height:24px;background:rgba(255,255,255,0.12)"></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+                <span style="font-size:.55rem;color:rgba(200,215,235,0.50);letter-spacing:1px;text-transform:uppercase">T2</span>
+                <span id="bTemp1b" style="font-size:.85rem;font-weight:650;color:#e0e8f0">-- °C</span>
+              </div>
+            </div>`}
           </div>
         </div>
         <div class="st stm">
@@ -1524,33 +1592,43 @@ class KhanSkyCard extends HTMLElement {
         </div>
       </div>
 
-      <!-- Row 2: MIN CELL | MAX CELL | REMAINING -->
+      <!-- Row 2: CELL VOLT | REMAINING | TODAY LOAD -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
         <div class="st">
-          <div style="display:flex;align-items:center;gap:7px">
-            <span style="font-size:1.0rem;line-height:1;flex-shrink:0">🔋</span>
-            <div style="min-width:0">
-              <div class="l">${this.config.label_min_cell||'MIN CELL'}</div>
-              <div class="v" id="bMinCell" style="color:#e0e8f0">-- V</div>
-            </div>
+          <div style="min-width:0;width:100%">
+            <div class="l">${this.config.label_cell_volt||'CELL VOLT'}</div>
+            ${(this.config._labels_custom_entities && this.config.label_entity_cell_volt) ? `
+            <div class="v" id="bMinCell" style="color:#e0e8f0;margin-top:4px">-- V</div>
+            <span id="bMaxCell" style="display:none"></span>` : `
+            <div style="display:flex;justify-content:space-evenly;align-items:center;width:100%;margin-top:2px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+                <span style="font-size:.55rem;color:rgba(200,215,235,0.50);letter-spacing:1px;text-transform:uppercase">MIN</span>
+                <span id="bMinCell" style="font-size:.85rem;font-weight:650;color:#e0e8f0">-- V</span>
+              </div>
+              <div style="width:1px;height:24px;background:rgba(255,255,255,0.12)"></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+                <span style="font-size:.55rem;color:rgba(200,215,235,0.50);letter-spacing:1px;text-transform:uppercase">MAX</span>
+                <span id="bMaxCell" style="font-size:.85rem;font-weight:650;color:#e0e8f0">-- V</span>
+              </div>
+            </div>`}
           </div>
         </div>
         <div class="st stm">
-          <div style="display:flex;align-items:center;gap:7px">
-            <span style="font-size:1.0rem;line-height:1;flex-shrink:0">🔋</span>
-            <div style="min-width:0">
-              <div class="l">${this.config.label_max_cell||'MAX CELL'}</div>
-              <div class="v" id="bMaxCell" style="color:#e0e8f0">-- V</div>
-            </div>
-          </div>
-        </div>
-        <div class="st">
           <div style="display:flex;align-items:center;gap:7px">
             <span style="font-size:1.0rem;line-height:1;flex-shrink:0">⚡</span>
             <div style="min-width:0">
               <div class="l">${this.config.label_remaining||'REMAINING'}</div>
               <div class="v" id="invRemCap" style="color:#3ce878">-- Ah</div>
               <div id="invRemKwh" style="font-size:.70rem;font-weight:400;color:rgba(160,185,220,0.55);display:none">-- kWh</div>
+            </div>
+          </div>
+        </div>
+        <div class="st">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:1.0rem;line-height:1;flex-shrink:0">🏡</span>
+            <div style="min-width:0">
+              <div class="l">${this.config.label_today_load||'TODAY LOAD'}</div>
+              <div class="v" id="invTodayLoad" style="color:#29b6f6">-- kWh</div>
             </div>
           </div>
         </div>
@@ -1581,7 +1659,7 @@ class KhanSkyCard extends HTMLElement {
           <span class="ico">🔋</span>
           <span class="lbl">${this.config.label_chg_dis||'CHG / DIS'}</span>
           <span class="val" id="invTodayBattChg" style="color:#3fb950">-- kWh</span>
-          <span style="font-size:.70rem;font-weight:400;color:#f39c4b;margin-top:2px;text-align:center;display:block" id="invTodayBattDis">-- kWh</span>
+          <span style="font-size:.70rem;font-weight:800;color:#f39c4b;margin-top:2px;text-align:center;display:block" id="invTodayBattDis">-- kWh</span>
         </div>
         <div class="pvi">
           <span class="ico">🔌</span>
@@ -1589,9 +1667,9 @@ class KhanSkyCard extends HTMLElement {
           <span class="val" id="invGridImport" style="color:#f39c4b">-- kWh</span>
         </div>
         <div class="pvi">
-          <span class="ico">🏡</span>
-          <span class="lbl">${this.config.label_today_load||'TODAY LOAD'}</span>
-          <span class="val" id="invTodayLoad" style="color:#29b6f6">-- kWh</span>
+          <span class="ico">⬆️</span>
+          <span class="lbl">${this.config.label_grid_export||'GRID EXPORT'}</span>
+          <span class="val" id="invGridExport" style="color:#4ade80">-- kWh</span>
         </div>
       </div>
       </div><!-- /kfc-content -->
@@ -1918,6 +1996,9 @@ class KhanSkyCard extends HTMLElement {
     const _n = (v, fallback = 0) => (v !== null && !isNaN(v)) ? v : fallback;
     const _nullOr0 = (v) => (v !== null && !isNaN(v)) ? v : 0; // for flow/direction values where 0 is valid
 
+    // Declare labelsOn early — used by _invTileSet closure defined below (must precede it)
+    const labelsOn = !!(this.config._labels_custom_entities);
+
     const pv1 = _n(this._val(this.config.pv1_power, true));
     const pv2 = _n(this._val(this.config.pv2_power, true));
     const pv3 = this.config._show_pv_extra ? _n(this._val(this.config.pv3_power, true)) : 0;
@@ -1927,8 +2008,6 @@ class KhanSkyCard extends HTMLElement {
     const _gridPrimary = this._val(this.config.grid_active_power, true);
     let gridActive = _gridPrimary !== null ? _gridPrimary : _nullOr0(this._val(this.config.grid_power_alt, true));
     if (this.config.invert_grid_power) gridActive = -gridActive;
-    const gridImport = _n(this._val(this.config.grid_import_energy));
-    const gridExport = _n(this._val(this.config.grid_export_energy));
     const load = _n(this._val(this.config.consump, true));
     // Fix #9: store raw null so we can show '--' and use toFixed(2) to avoid float artefacts
     const _todayPvRaw = this._val(this.config.today_pv);
@@ -1974,13 +2053,9 @@ class KhanSkyCard extends HTMLElement {
     const battVolt2 = dual ? _n(this._val(this.config.battery2_voltage)) : 0;
     const mos2 = dual ? _n(this._val(this.config.battery2_mos)) : 0;
 
-    // Raw _val (nullable): null = entity missing/unavailable; 0 = entity present but idle.
-    const _chargerPowerRaw   = this._val(this.config.charger_power, true);
-    const _chargerCurrentRaw = this._val(this.config.charger_current);
-    const _chargerSocRaw     = this._val(this.config.charger_soc);
-    const chargerPower   = _n(_chargerPowerRaw);
-    const chargerCurrent = _n(_chargerCurrentRaw);
-    const chargerSoc     = _n(_chargerSocRaw);
+    const chargerPower = _n(this._val(this.config.charger_power, true));
+    const chargerCurrent = _n(this._val(this.config.charger_current));
+    const chargerSoc = _n(this._val(this.config.charger_soc));
     const chargerEtaSensor = this._val(this.config.charger_eta);
     const chargerBattCapWh = Number(this.config.charger_battery_capacity_wh) || 0;
     const chargerStateStr = this._strVal(this.config.charger_state);
@@ -2196,24 +2271,6 @@ class KhanSkyCard extends HTMLElement {
     // Grid flow mid-label removed — power shown in GRID col below
     const gridIsActive = absGridActive > 10;
 
-    // Grid voltage under GRID label — 1 decimal; grayed when inactive (mirrors fcGridVal behavior)
-    const fcGridVoltEl = getEl('fcGridVoltVal');
-    if (fcGridVoltEl) {
-      const _gvEntityId = this.config.grid_voltage || '';
-      const _gvState = _gvEntityId && this._hass?.states[_gvEntityId];
-      const _gvVal = _gvState && _gvState.state !== 'unavailable' && _gvState.state !== 'unknown'
-        ? parseFloat(_gvState.state) : null;
-      fcGridVoltEl.setAttribute('opacity', '1');
-      if (!gridIsActive || _gvVal === null || isNaN(_gvVal)) {
-        // Inactive — show grayed placeholder matching fcGridVal inactive style
-        fcGridVoltEl.setAttribute('fill', 'rgba(180,190,210,0.35)');
-        fcGridVoltEl.textContent = _gvVal !== null && !isNaN(_gvVal) ? ' ' + _gvVal.toFixed(1) + ' V' : ' -- V';
-      } else {
-        // Active — white with equal spacing
-        fcGridVoltEl.setAttribute('fill', 'rgba(200,220,255,0.75)');
-        fcGridVoltEl.textContent = ' ' + _gvVal.toFixed(1) + ' V';
-      }
-    }
     const battIconWrap = getEl('battIconWrap');
     if (battIconWrap) { battIconWrap.setAttribute('filter', absPwr1 >= 50 ? 'url(#iconGlowBlue)' : ''); }
 
@@ -2236,7 +2293,6 @@ class KhanSkyCard extends HTMLElement {
       const bf = getEl('battFillBar'); if (bf) { bf.setAttribute('y', fill.y); bf.setAttribute('height', fill.height); bf.setAttribute('fill', fill.color); bf.setAttribute('filter', fill.filter); }
       const bh = getEl('battFillHL'); if (bh) { bh.setAttribute('y', fill.y); bh.setAttribute('height', fill.height); }
       setText('fcBattVal', battSoc1 + '%'); setAttr('fcBattVal', 'fill', fill.textColor);
-      setText('battVoltageFlow', battVolt1.toFixed(1) + ' V');
       const bolt = getEl('battBoltGroup'); if (bolt) bolt.setAttribute('opacity', battPwr1 > 10 ? '1' : '0');
       const voltBelowEl = getEl('fcBattVoltBelow');
       if (voltBelowEl) { voltBelowEl.textContent = battVolt1.toFixed(1) + ' V'; voltBelowEl.setAttribute('fill','#ffffff'); }
@@ -2294,6 +2350,9 @@ class KhanSkyCard extends HTMLElement {
     setText('invTempFlow', invTemp.toFixed(1) + ' °C');
     setText('invNameLabel', this.config.inverter_name || 'INV');
     setAttr('invTempFlow', 'fill', invTemp >= THR.tempCrit ? '#ef4444' : invTemp >= THR.tempWarn ? '#f59e0b' : '#e0e8f0');
+    // Inverter banner visibility toggle
+    const _invBannerGroup = getEl('fcInvBannerGroup');
+    if (_invBannerGroup) _invBannerGroup.style.display = this.config._show_inv_banner === false ? 'none' : '';
     const invLoadPct = load > 0 ? Math.min(load / invMax * 100, 100) : 0;
     const _loadColor = invLoadPct >= THR.loadCrit ? '#ef4444' : invLoadPct >= THR.loadWarn ? '#f59e0b' : (load > 10 ? '#e0e8f0' : '#4a5568');
     // Restore load% in INV badge
@@ -2309,8 +2368,13 @@ class KhanSkyCard extends HTMLElement {
       _loadFcEl.setAttribute('fill', _loadColor);
     }
 
-    // Grid col: red=importing, green=exporting, gray=idle  (gridCol/gridDir/gridTxtFmt declared above)
-    const gridFcEl = getEl('fcGridVal');
+    // Grid col: red=importing, green=exporting, gray=idle
+    const gridFcEl    = getEl('fcGridVal');
+    const gridVoltEl  = getEl('fcGridVoltVal');
+    const phase3Group = getEl('grid3PhaseVertical');
+    const _show3ph    = !!(this.config._show_3phase);
+
+    // Single total power value
     if (gridFcEl) {
       if (!gridIsActive) {
         gridFcEl.setAttribute('fill', 'rgba(180,190,210,0.35)');
@@ -2319,11 +2383,22 @@ class KhanSkyCard extends HTMLElement {
         gridFcEl.setAttribute('fill', gridCol);
         gridFcEl.textContent = gridDir + gridTxtFmt;
       }
+      // Hide single values when 3-phase is active (L1/L2/L3 take over)
+      gridFcEl.setAttribute('opacity', _show3ph ? '0' : '1');
     }
-    // ── 3-phase grid vertical stack (left edge) ──
-    const phase3Group = getEl('grid3PhaseVertical');
+    // Single grid voltage (default visible, hidden in 3-phase mode)
+    if (gridVoltEl) {
+      const _gvEntityId = this.config.grid_voltage || '';
+      const _gvState = _gvEntityId && this._hass?.states[_gvEntityId];
+      const _gvVal = _gvState && _gvState.state !== 'unavailable' && _gvState.state !== 'unknown'
+        ? parseFloat(_gvState.state) : null;
+      gridVoltEl.textContent = (_gvVal !== null && !isNaN(_gvVal)) ? _gvVal.toFixed(0) + ' V' : '-- V';
+      gridVoltEl.setAttribute('fill', gridIsActive ? 'rgba(200,220,255,0.75)' : 'rgba(180,190,210,0.35)');
+      gridVoltEl.setAttribute('opacity', _show3ph ? '0' : '1');
+    }
+    // ── 3-phase sub-row (like PV1/PV2) ──
     if (phase3Group) {
-      if (this.config._show_3phase) {
+      if (_show3ph) {
         phase3Group.removeAttribute('display');
         const _fmtPhase = (w) => {
           const aw = Math.abs(w);
@@ -2337,6 +2412,17 @@ class KhanSkyCard extends HTMLElement {
         const l1El = getEl('fcGridL1Val'); if (l1El) { l1El.textContent = _fmtPhase(phA); l1El.setAttribute('fill', _phColor(phA)); }
         const l2El = getEl('fcGridL2Val'); if (l2El) { l2El.textContent = _fmtPhase(phB); l2El.setAttribute('fill', _phColor(phB)); }
         const l3El = getEl('fcGridL3Val'); if (l3El) { l3El.textContent = _fmtPhase(phC); l3El.setAttribute('fill', _phColor(phC)); }
+        // Per-phase voltages
+        const _fmtPV = (eid) => {
+          if (!eid) return '-- V';
+          const s = this._hass?.states[eid];
+          if (!s || s.state === 'unavailable' || s.state === 'unknown') return '-- V';
+          const v = parseFloat(s.state);
+          return isNaN(v) ? '-- V' : v.toFixed(0) + 'V';
+        };
+        const l1vEl = getEl('fcGridL1VoltVal'); if (l1vEl) l1vEl.textContent = _fmtPV(this.config.grid_phase_a_volt);
+        const l2vEl = getEl('fcGridL2VoltVal'); if (l2vEl) l2vEl.textContent = _fmtPV(this.config.grid_phase_b_volt);
+        const l3vEl = getEl('fcGridL3VoltVal'); if (l3vEl) l3vEl.textContent = _fmtPV(this.config.grid_phase_c_volt);
       } else {
         phase3Group.setAttribute('display', 'none');
       }
@@ -2374,23 +2460,60 @@ class KhanSkyCard extends HTMLElement {
       setText('pv4FlowVal', pv4 >= 1000 ? (pv4 / 1000).toFixed(2) + ' kW' : pv4.toFixed(0) + ' W');
     }
 
-    // Fix #9: use toFixed(2) to prevent floating-point artefacts; show '--' when sensor unavailable
-    setText('invTodayPv',      _todayPvRaw      !== null ? ' ' + todayPv.toFixed(1)      + ' kWh' : '-- kWh');
-    setText('invTodayBattChg', _todayBattChgRaw !== null ? ' ' + todayBattChg.toFixed(1) + ' kWh' : '-- kWh');
-    setText('invTodayBattDis', battDis1Raw      !== null ? ' ' + battDis1.toFixed(1)     + ' kWh' : '-- kWh');
-    setText('invTodayLoad',    _todayLoadRaw    !== null ? ' ' + todayLoad.toFixed(1)    + ' kWh' : '-- kWh');
-    // Grid Import — inverter tile 3 (invGridImport)
+    // ── Inverter tiles: entity override helper ──
+    // If labelsOn AND entity configured → show entity value/state; else → show default calculated value
+    const _invTileSet = (elId, defaultText, defaultColor, entityKey) => {
+      const el = getEl(elId);
+      if (!el) return;
+      if (labelsOn && this.config[entityKey]) {
+        const s = this._hass?.states[this.config[entityKey]];
+        if (!s || s.state === 'unavailable' || s.state === 'unknown') {
+          el.textContent = '--'; el.style.color = '#8b949e'; return;
+        }
+        const v = parseFloat(s.state);
+        if (!isNaN(v)) {
+          const u = (s.attributes?.unit_of_measurement || '').trim();
+          const fmt = _fmtCustom(v, u);
+          el.textContent = fmt.text; el.style.color = fmt.color;
+        } else {
+          // Text state — show as-is
+          el.textContent = s.state; el.style.color = '#c9d1d9';
+        }
+      } else {
+        el.textContent = defaultText; el.style.color = defaultColor;
+      }
+    };
+
+    // TODAY PV
+    const _todayPvText  = _todayPvRaw !== null ? ' ' + todayPv.toFixed(1) + ' kWh' : '-- kWh';
+    _invTileSet('invTodayPv', _todayPvText, '#f4d03f', 'label_entity_today_pv');
+    // CHG / DIS — override replaces charge value; discharge sub-line always stays
+    const _chgText = _todayBattChgRaw !== null ? ' ' + todayBattChg.toFixed(1) + ' kWh' : '-- kWh';
+    _invTileSet('invTodayBattChg', _chgText, '#3fb950', 'label_entity_chg_dis');
+    setText('invTodayBattDis', battDis1Raw !== null ? ' ' + battDis1.toFixed(1) + ' kWh' : '-- kWh');
+    // TODAY LOAD (moved to stat tiles row)
+    const _loadText = _todayLoadRaw !== null ? ' ' + todayLoad.toFixed(1) + ' kWh' : '-- kWh';
+    _invTileSet('invTodayLoad', _loadText, '#29b6f6', 'label_entity_today_load');
+    // Grid Import — uses grid_import_today entity as primary source, label_entity_grid_import as override
     const _gridImportEntityId = this.config.grid_import_today || 'sensor.goodwe_today_energy_import';
     const _gridImportStateObj = this._hass && this._hass.states[_gridImportEntityId];
     let _gridImportText = '-- kWh';
-    let _gridImportColor = '#f39c4b';
     if (_gridImportStateObj && _gridImportStateObj.state !== 'unavailable' && _gridImportStateObj.state !== 'unknown') {
       const _giv = parseFloat(_gridImportStateObj.state);
       const _giu = (_gridImportStateObj.attributes?.unit_of_measurement || 'kWh').trim();
       _gridImportText = isNaN(_giv) ? _gridImportStateObj.state : ' ' + _giv.toFixed(1) + ' ' + _giu;
     }
-    const _invGridImportEl = getEl('invGridImport');
-    if (_invGridImportEl) { _invGridImportEl.textContent = _gridImportText; _invGridImportEl.style.color = _gridImportColor; }
+    _invTileSet('invGridImport', _gridImportText, '#f39c4b', 'label_entity_grid_import');
+    // Grid Export — uses grid_export_today entity as primary source, label_entity_grid_export as override
+    const _gridExportEntityId = this.config.grid_export_today || '';
+    const _gridExportStateObj = _gridExportEntityId && this._hass && this._hass.states[_gridExportEntityId];
+    let _gridExportText = '-- kWh';
+    if (_gridExportStateObj && _gridExportStateObj.state !== 'unavailable' && _gridExportStateObj.state !== 'unknown') {
+      const _gev = parseFloat(_gridExportStateObj.state);
+      const _geu = (_gridExportStateObj.attributes?.unit_of_measurement || 'kWh').trim();
+      _gridExportText = isNaN(_gev) ? _gridExportStateObj.state : ' ' + _gev.toFixed(1) + ' ' + _geu;
+    }
+    _invTileSet('invGridExport', _gridExportText, '#4ade80', 'label_entity_grid_export');
     // ── Remaining Ah + kWh ──
     // Each battery uses its OWN Ah capacity; battery2_full_ah defaults to fullAh if not set
     const fullAh2 = capUnit === 'ah'
@@ -2427,7 +2550,6 @@ class KhanSkyCard extends HTMLElement {
 
     // ── Label entity overrides for stat tiles ──
     // Per-row: override active only when global gate ON AND label text ≠ its default
-    const labelsOn = !!(this.config._labels_custom_entities);
     const _rowActive = (labelKey, def) => labelsOn && (this.config[labelKey] || def) !== def;
 
     // Read value from a custom entity key.
@@ -2444,12 +2566,6 @@ class KhanSkyCard extends HTMLElement {
       // Non-numeric state (e.g. "idle", "charging", "on grid backup mode")
       return { val: null, text: String(s.state), isText: true };
     };
-    // Keep _readNum as numeric-only shortcut (returns number or null)
-    const _readNum = (entityKey) => {
-      const r = _readVal(entityKey);
-      return (r && !r.isText) ? r.val : null;
-    };
-
     // Read the HA unit_of_measurement for a custom entity key.
     const _readUnit = (entityKey) =>
       this._hass?.states[this.config[entityKey]]?.attributes?.unit_of_measurement || '';
@@ -2505,15 +2621,17 @@ class KhanSkyCard extends HTMLElement {
     const _bmsTempRaw = bmsTempCustom ? _readVal('label_entity_bms_temp') : null;
     const bmsTempUnit = bmsTempCustom ? _readUnit('label_entity_bms_temp') : '°C';
 
-    // Min cell tile
-    const minCellCustom = _rowActive('label_min_cell', 'Min Cell') && this.config.label_entity_min_cell;
-    const _minCellRaw = minCellCustom ? _readVal('label_entity_min_cell') : null;
-    const minCellUnit  = minCellCustom ? _readUnit('label_entity_min_cell') : 'V';
-
-    // Max cell tile
-    const maxCellCustom = _rowActive('label_max_cell', 'Max Cell') && this.config.label_entity_max_cell;
-    const _maxCellRaw = maxCellCustom ? _readVal('label_entity_max_cell') : null;
-    const maxCellUnit  = maxCellCustom ? _readUnit('label_entity_max_cell') : 'V';
+    // Cell Volt tile (combined MIN+MAX) — custom entity overrides both sub-values
+    const cellVoltCustom = _rowActive('label_cell_volt', 'CELL VOLT') && this.config.label_entity_cell_volt;
+    const _cellVoltRaw   = cellVoltCustom ? _readVal('label_entity_cell_volt') : null;
+    const cellVoltUnit   = cellVoltCustom ? _readUnit('label_entity_cell_volt') : 'V';
+    // Keep minCell/maxCell aliases for the split-render path
+    const minCellCustom = cellVoltCustom;
+    const _minCellRaw   = _cellVoltRaw;
+    const minCellUnit   = cellVoltUnit;
+    const maxCellCustom = cellVoltCustom;
+    const _maxCellRaw   = _cellVoltRaw;
+    const maxCellUnit   = cellVoltUnit;
 
     // PV Voltage tile entity override
     const pvVoltCustom = _rowActive('label_pv_voltage', 'PV VOLTAGE') && this.config.label_entity_pv_voltage;
@@ -2534,26 +2652,33 @@ class KhanSkyCard extends HTMLElement {
     };
 
     const _bT1o = getEl('bTemp1');
+    const _bT1b = getEl('bTemp1b'); // T2 sub-slot in split tile
     if (_bT1o) {
+      const _tempColor = (v) => v >= THR.tempCrit ? '#ef4444' : v >= THR.tempWarn ? '#f59e0b' : '#e0e8f0';
       if (cellTempCustom) {
         if (!_cellTempRaw) {
-          _bT1o.textContent = temp1_1.toFixed(1) + '\u2002\u2002\u2002' + temp2_1.toFixed(1) + ' °C';
-          const _t1max = Math.max(temp1_1, temp2_1);
-          _bT1o.style.color = _t1max >= THR.tempCrit ? '#ef4444' : _t1max >= THR.tempWarn ? '#f59e0b' : '#e0e8f0';
+          _bT1o.textContent = temp1_1.toFixed(1) + ' °C';
+          _bT1o.style.color = _tempColor(temp1_1);
+          if (_bT1b) { _bT1b.textContent = temp2_1.toFixed(1) + ' °C'; _bT1b.style.color = _tempColor(temp2_1); }
         }
-        else if (_cellTempRaw.isText) { _bT1o.textContent = _cellTempRaw.text; _bT1o.style.color = '#c9d1d9'; }
+        else if (_cellTempRaw.isText) {
+          _bT1o.textContent = _cellTempRaw.text; _bT1o.style.color = '#c9d1d9';
+          if (_bT1b) { _bT1b.textContent = '--'; _bT1b.style.color = '#c9d1d9'; }
+        }
         else {
-          // Auto-correct: some sensors return e.g. 4.5 instead of 45 °C — multiply by 10 when <10
           let correctedVal = _cellTempRaw.val;
           if ((cellTempUnit === '°C' || cellTempUnit === 'C') && correctedVal < 10 && correctedVal > 0) correctedVal *= 10;
-          const fmt = _fmtCustom(correctedVal, cellTempUnit); _bT1o.textContent = fmt.text; _bT1o.style.color = fmt.color;
+          const fmt = _fmtCustom(correctedVal, cellTempUnit);
+          _bT1o.textContent = fmt.text; _bT1o.style.color = fmt.color;
+          if (_bT1b) { _bT1b.textContent = temp2_1.toFixed(1) + ' °C'; _bT1b.style.color = _tempColor(temp2_1); }
         }
       } else {
-        _bT1o.textContent = temp1_1.toFixed(1) + '\u2002\u2002\u2002' + temp2_1.toFixed(1) + ' °C';
-        const _t1max = Math.max(temp1_1, temp2_1);
-        _bT1o.style.color = _t1max >= THR.tempCrit ? '#ef4444' : _t1max >= THR.tempWarn ? '#f59e0b' : '#e0e8f0';
+        _bT1o.textContent = temp1_1.toFixed(1) + ' °C';
+        _bT1o.style.color = _tempColor(temp1_1);
+        if (_bT1b) { _bT1b.textContent = temp2_1.toFixed(1) + ' °C'; _bT1b.style.color = _tempColor(temp2_1); }
       }
       _applyTileSize(_bT1o, 'val_cell_temp_size');
+      if (_bT1b) _applyTileSize(_bT1b, 'val_cell_temp_size');
       _applyTileSize(_bT1o.closest('.st')?.querySelector('.l'), 'label_cell_temp_size');
     }
     const _bT2o = getEl('bTemp2');
@@ -2587,8 +2712,8 @@ class KhanSkyCard extends HTMLElement {
         _bMno.textContent = minCell1.toFixed(2) + ' V';
         _bMno.style.color = (minCell1 < THR.cellVCrit || minCell1 > THR.cellVHigh) ? '#ef4444' : minCell1 < THR.cellVLow ? '#f59e0b' : '#e0e8f0';
       }
-      _applyTileSize(_bMno, 'val_min_cell_size');
-      _applyTileSize(_bMno.closest('.st')?.querySelector('.l'), 'label_min_cell_size');
+      _applyTileSize(_bMno, 'val_cell_volt_size');
+      _applyTileSize(_bMno.closest('.st')?.querySelector('.l'), 'label_cell_volt_size');
     }
     const _bMxo = getEl('bMaxCell');
     if (_bMxo) {
@@ -2603,8 +2728,8 @@ class KhanSkyCard extends HTMLElement {
         _bMxo.textContent = maxCell1.toFixed(2) + ' V';
         _bMxo.style.color = (maxCell1 < THR.cellVCrit || maxCell1 > THR.cellVHigh) ? '#ef4444' : maxCell1 < THR.cellVLow ? '#f59e0b' : '#e0e8f0';
       }
-      _applyTileSize(_bMxo, 'val_max_cell_size');
-      _applyTileSize(_bMxo.closest('.st')?.querySelector('.l'), 'label_max_cell_size');
+      _applyTileSize(_bMxo, 'val_cell_volt_size');
+      _applyTileSize(_bMxo.closest('.st')?.querySelector('.l'), 'label_cell_volt_size');
     }
 
     // ── PV Voltage tile override ──
@@ -2684,7 +2809,7 @@ class KhanSkyCard extends HTMLElement {
     const _invLoadEl = getEl('invTodayLoad');
     if (_invLoadEl) {
       _applyTileSize(_invLoadEl, 'val_today_load_size');
-      _applyTileSize(_invLoadEl.closest('.pvi')?.querySelector('.lbl'), 'label_today_load_size');
+      _applyTileSize(_invLoadEl.closest('.st')?.querySelector('.l'), 'label_today_load_size');
     }
     const _invRemCapEl2 = getEl('invRemCap');
     const _invRemKwhEl2 = getEl('invRemKwh');
@@ -2710,38 +2835,55 @@ class KhanSkyCard extends HTMLElement {
       }
     }
 
-    // EV — compute state regardless of DOM presence; update DOM only if elements exist
-    const isChargingEV = chargerPower > 10
-                      || chargerStateStr.includes('charg')
-                      || chargerStateStr === 'active'
-                      || chargerStateStr === 'occupied'
-                      || chargerStateStr === 'connected'
-                      || chargerStateStr === 'plugged_in'
-                      || chargerStateStr === 'waiting'
-                      || chargerStateStr === 'ready'
-                      || chargerStateStr === 'ev_connected';
-    const isCompleted  = chargerStateStr === 'completed'
-                      || chargerStateStr === 'finished'
-                      || chargerStateStr === 'complete'
-                      || chargerStateStr === 'full';
+    // EV
     const evGroup = getEl('evGroup');
     if (evGroup) {
-      evGroup.style.display = this.config._show_ev ? '' : 'none';
+      if (!this.config._show_ev) {
+        evGroup.style.display = 'none';
+        // Fix #12: removed early return here � was silently skipping any code added after this block
+      } else {
+        evGroup.style.display = '';
+      const isChargingEV = chargerStateStr === 'charging'
+                        || chargerStateStr === 'active'
+                        || chargerStateStr === 'occupied'
+                        || chargerStateStr.includes('charg');
+      const isCompleted = chargerStateStr === 'completed'
+                       || chargerStateStr === 'finished'
+                       || chargerStateStr === 'complete'
+                       || chargerStateStr === 'full';
       const evFlow = getEl('flowHomeEV');
-      if (evFlow) evFlow.setAttribute('opacity', isChargingEV ? '0.9' : '0');
-      // Show value if entity is configured and readable (even 0). '--' only if entity absent.
-      setText('evPowerVal',   _chargerPowerRaw   !== null ? chargerPower.toFixed(0)   + ' W' : '-- W');
-      setText('evCurrentVal', _chargerCurrentRaw !== null ? chargerCurrent.toFixed(1) + ' A' : '-- A');
-      setText('evSocVal',     _chargerSocRaw     !== null ? chargerSoc.toFixed(0)     + ' %' : '-- %');
-      let evEta = isCompleted ? 'Full' : '--';
-      if (isChargingEV) {
-        if (chargerEtaSensor !== null && !isNaN(chargerEtaSensor)) {
-          evEta = this._fmtTime(chargerEtaSensor / 60);
-        } else if (chargerBattCapWh && chargerSoc > 0 && chargerPower > 0) {
-          evEta = this._fmtTime(chargerBattCapWh * (100 - chargerSoc) / 100 / chargerPower);
+      if (evFlow) {
+        if (isChargingEV) {
+          evFlow.setAttribute('opacity', '0.9'); evFlow.setAttribute('stroke', '#00aaff');
+        } else if (isCompleted) {
+          evFlow.setAttribute('opacity', '0');
+        } else {
+          evFlow.setAttribute('opacity', '0');
         }
       }
-      setText('evEtaVal', evEta);
+      if (isChargingEV || isCompleted) {
+        setText('evPowerVal', chargerPower.toFixed(0) + ' W');
+        setText('evCurrentVal', chargerCurrent.toFixed(1) + ' A');
+        setText('evSocVal', chargerSoc.toFixed(0) + ' %');
+        let evEta = '--';
+        if (isChargingEV) {
+          if (chargerEtaSensor !== null && !isNaN(chargerEtaSensor)) evEta = this._fmtTime(chargerEtaSensor / 60);
+          else if (chargerBattCapWh && chargerSoc > 0 && chargerPower > 0) {
+            const remainingWh = chargerBattCapWh * (100 - chargerSoc) / 100;
+            const hours = remainingWh / chargerPower;
+            evEta = this._fmtTime(hours);
+          }
+        } else if (isCompleted) {
+          evEta = 'Full';
+        }
+        setText('evEtaVal', evEta);
+      } else {
+        setText('evPowerVal', '-- W');
+        setText('evCurrentVal', '-- A');
+        setText('evSocVal', '-- %');
+        setText('evEtaVal', '--');
+      }
+      } // end else (_show_ev)
     }
 
     // ── Extra Tiles dynamic update ──
@@ -2775,6 +2917,6 @@ window.customCards.push({
   name: 'Khan SkyCard',
   description: 'Real-time solar/battery/grid energy flow card. indcolor system: threshold-driven colors (amber/red). Per-tile font sizes. Typography & threshold config. Load display below house.',
   preview: true,
-  version: '4.4.0',
+  version: '2.5.0',
 });
 customElements.define('khan-skycard', KhanSkyCard);
