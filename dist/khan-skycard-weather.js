@@ -1577,7 +1577,7 @@ try {
       .kfc-wx-condition{font-size:1rem;font-weight:650;white-space:nowrap}
       .kfc-wx-minmax{font-size:.62rem;opacity:.75;margin-top:3px}
       .kfc-wx-details{display:flex;gap:14px;align-items:center;white-space:nowrap;font-size:.82rem;font-weight:600;opacity:.95;margin-top:9px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
-      .kfc-wx-forecast{position:absolute;top:220px;left:190px;width:620px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
+      .kfc-wx-forecast{position:absolute;top:190px;left:155px;width:620px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
       .kfc-wx-day{text-align:center;min-width:0;height:145px;box-sizing:border-box;padding:12px 5px 9px;background:rgba(15,60,110,.18);border:1px solid rgba(255,255,255,.24);border-radius:12px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
       .kfc-wx-day:last-child{border-right:none}
      .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
