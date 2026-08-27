@@ -1,3 +1,6 @@
 {
-  "name": "khan-skycard-weather"
+  "name": "Khan SkyCard Weather",
+  "render_readme": true,
+  "content_in_root": false,
+  "filename": "khan-skycard.js"
 }
