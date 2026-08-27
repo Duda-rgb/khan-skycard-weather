@@ -1174,31 +1174,76 @@ class KhanSkyCard extends HTMLElement {
     const now = Date.now();
     if (!force && this._weatherForecastEntity === eid && this._weatherForecast.length && now - this._weatherForecastLastFetch < 30 * 60 * 1000) return;
     if (this._weatherForecastPending) return;
-    if (typeof this._hass.callService !== 'function') return;
+    if (typeof this._hass.callWS !== 'function') return;
 
-    this._weatherForecastPending = true;
-    try {
-      // Home Assistant 2024+ weather.get_forecasts response service.
-      const result = await this._hass.callService(
-        'weather',
-        'get_forecasts',
-        { type: 'daily' },
-        { entity_id: eid },
-        true
-      );
-      const fc = this._extractForecastResponse(result, eid);
-      if (fc.length) {
-        this._weatherForecast = fc;
-        this._weatherForecastEntity = eid;
-        this._weatherForecastLastFetch = now;
-      }
-    } catch (err) {
-      // Keep current weather visible even if this integration does not support forecasts.
-      console.debug('[khan-skycard-weather] forecast unavailable', err);
-    } finally {
-      this._weatherForecastPending = false;
-      this._updateWeatherPanel();
+this._weatherForecastPending = true;
+
+try {
+  const result = await this._hass.callWS({
+    type: 'call_service',
+    domain: 'weather',
+    service: 'get_forecasts',
+    service_data: {
+      type: 'daily'
+    },
+    target: {
+      entity_id: eid
+    },
+    return_response: true
+  });
+
+  console.debug(
+    '[khan-skycard-weather] forecast response',
+    result
+  );
+
+  let fc = [];
+
+  // Lehetséges Home Assistant válaszformátumok kezelése
+  const candidates = [
+    result?.response?.[eid]?.forecast,
+    result?.[eid]?.forecast,
+    result?.response?.response?.[eid]?.forecast,
+    result?.response?.forecast,
+    result?.forecast
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) && candidate.length) {
+      fc = candidate;
+      break;
     }
+  }
+
+  if (fc.length) {
+    this._weatherForecast = fc;
+    this._weatherForecastEntity = eid;
+    this._weatherForecastLastFetch = Date.now();
+
+    console.debug(
+      '[khan-skycard-weather] forecast loaded',
+      fc
+    );
+  } else {
+    console.warn(
+      '[khan-skycard-weather] no forecast found in response',
+      result
+    );
+  }
+
+} catch (err) {
+
+  console.error(
+    '[khan-skycard-weather] forecast error',
+    err
+  );
+
+} finally {
+
+  this._weatherForecastPending = false;
+  this._updateWeatherPanel();
+
+}
   }
 
   _updateWeatherPanel() {
