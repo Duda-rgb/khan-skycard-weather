@@ -1577,13 +1577,14 @@ try {
       .kfc-wx-condition{font-size:1rem;font-weight:650;white-space:nowrap}
       .kfc-wx-minmax{font-size:.62rem;opacity:.75;margin-top:3px}
       .kfc-wx-details{display:flex;gap:14px;align-items:center;white-space:nowrap;font-size:.82rem;font-weight:600;opacity:.95;margin-top:9px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
-      .kfc-wx-forecast{position:absolute;top:225px;left:150px;width:1050px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
-      .kfc-wx-day{text-align:center;min-width:0;height:190px;box-sizing:border-box;padding:16px 8px 12px;background:rgba(15,60,110,.16);border:1px solid rgba(255,255,255,.25);border-radius:14px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
+      .kfc-wx-forecast{position:absolute;top:220px;left:190px;width:620px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
+      .kfc-wx-day{text-align:center;min-width:0;height:145px;box-sizing:border-box;padding:12px 5px 9px;background:rgba(15,60,110,.18);border:1px solid rgba(255,255,255,.24);border-radius:12px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
       .kfc-wx-day:last-child{border-right:none}
-      .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
-      .kfc-wx-icon{font-size:2.25rem;line-height:1.3;margin:8px 0 5px}
-      .kfc-wx-high{font-size:1.45rem;font-weight:750;display:inline-block;margin-right:7px}
-      .kfc-wx-low{font-size:.95rem;opacity:.85;display:inline-block;margin-top:2px}
+     .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
+     .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
+     .kfc-wx-icon{font-size:2.2rem;line-height:1.2;margin:9px 0 6px}
+     .kfc-wx-high{font-size:1.45rem;font-weight:750;display:inline-block;margin-right:6px}
+     .kfc-wx-low{font-size:.9rem;opacity:.85;display:inline-block}
       .kfc-wx-loading{grid-column:1/-1;font-size:.60rem;opacity:.65;text-align:center;padding:5px}
       @media (max-width:780px){.kfc-wx-temp{font-size:2.5rem}.kfc-wx-details{gap:7px;font-size:.52rem}.kfc-wx-forecast{left:18%;width:64%;gap:5px}.kfc-wx-icon{font-size:1.25rem}}
     </style>
