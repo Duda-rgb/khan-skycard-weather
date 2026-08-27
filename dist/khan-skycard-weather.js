@@ -1291,7 +1291,7 @@ try {
     const forecastEl = root.getElementById('kfcWeatherForecast');
     if (forecastEl) {
       const count = Math.max(1, Math.min(5, Number(this.config._weather_forecast_days) || 5));
-      const items = forecast.slice(0, count);
+      const items = forecast.slice(1, count + 1);
       forecastEl.style.gridTemplateColumns = `repeat(${count}, minmax(0,1fr))`;
       forecastEl.innerHTML = items.length ? items.map(item => {
         const hi = this._weatherNum(item.temperature, 0);
