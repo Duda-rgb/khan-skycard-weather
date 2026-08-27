@@ -16,3 +16,5 @@ This version adds:
 - 5-day weather forecast
 - Responsive forecast positioning
 - Automatic centering on different card widths
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/2d95efd2-b67c-4bb3-8f30-28813ec6b82b" />
