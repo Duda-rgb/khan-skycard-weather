@@ -1524,23 +1524,23 @@ class KhanSkyCard extends HTMLElement {
       .kfc-pwr-fill-area{position:absolute;left:0;top:0;bottom:0;right:0;overflow:hidden;border-radius:2px}
       #pwrBar{position:absolute;top:0;left:0;bottom:0;width:0%;height:100%;border-radius:2px;transition:width .4s ease,background .4s ease}
       .kfc-bar-pct{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:.58rem;font-weight:650;color:#29b6f6;line-height:1;white-space:nowrap;z-index:2;pointer-events:none}
-      .kfc-weather-panel{position:absolute;top:12px;left:14px;width:min(330px,34%);min-width:245px;z-index:4;box-sizing:border-box;padding:9px 11px 8px;border:1px solid rgba(255,255,255,.22);border-radius:13px;background:rgba(4,18,38,.24);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.72);pointer-events:none}
-      .kfc-wx-title{font-size:.58rem;font-weight:750;letter-spacing:.9px;opacity:.92;line-height:1.1;margin-bottom:1px}
-      .kfc-wx-current{display:flex;align-items:flex-end;gap:9px;min-height:46px}
-      .kfc-wx-temp{font-size:2.55rem;font-weight:300;line-height:.95;letter-spacing:-2px}
-      .kfc-wx-meta{padding-bottom:3px;min-width:0}
-      .kfc-wx-condition{font-size:.72rem;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .kfc-wx-minmax{font-size:.58rem;opacity:.70;margin-top:2px}
-      .kfc-wx-details{display:flex;gap:9px;align-items:center;white-space:nowrap;overflow:hidden;font-size:.52rem;opacity:.90;margin-top:3px;padding:4px 0;border-top:1px solid rgba(255,255,255,.12)}
-      .kfc-wx-forecast{display:grid;gap:3px;padding-top:3px}
-      .kfc-wx-day{text-align:center;min-width:0;border-right:1px solid rgba(255,255,255,.08)}
+      .kfc-weather-panel{position:absolute;top:14px;left:18px;z-index:5;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.80);background:transparent;border:none;border-radius:0;padding:0;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:none}
+      .kfc-wx-title{font-size:.65rem;font-weight:750;letter-spacing:1px;text-transform:uppercase;opacity:.95;line-height:1.1;margin-bottom:2px}
+      .kfc-wx-current{display:flex;align-items:flex-end;gap:12px;min-height:46px}
+      .kfc-wx-temp{font-size:3.2rem;font-weight:300;line-height:.95;letter-spacing:-2px}
+      .kfc-wx-meta{padding-bottom:4px;min-width:0}
+      .kfc-wx-condition{font-size:.78rem;font-weight:650;white-space:nowrap}
+      .kfc-wx-minmax{font-size:.62rem;opacity:.75;margin-top:3px}
+      .kfc-wx-details{display:flex;gap:12px;align-items:center;white-space:nowrap;font-size:.62rem;font-weight:600;opacity:.95;margin-top:7px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
+      .kfc-wx-forecast{position:absolute;top:205px;left:205px;width:590px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
+      .kfc-wx-day{text-align:center;min-width:0;padding:9px 5px 8px;background:rgba(15,60,110,.24);border:1px solid rgba(255,255,255,.15);border-radius:11px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
       .kfc-wx-day:last-child{border-right:none}
-      .kfc-wx-dayname{font-size:.50rem;font-weight:750;letter-spacing:.35px}
-      .kfc-wx-icon{font-size:.92rem;line-height:1.15;margin:1px 0}
-      .kfc-wx-high{font-size:.58rem;font-weight:750}
-      .kfc-wx-low{font-size:.48rem;opacity:.68}
-      .kfc-wx-loading{grid-column:1/-1;font-size:.54rem;opacity:.65;text-align:center;padding:5px}
-      @media (max-width:780px){.kfc-weather-panel{width:42%;min-width:210px}.kfc-wx-temp{font-size:2.15rem}.kfc-wx-details{gap:5px;font-size:.46rem}.kfc-wx-icon{font-size:.82rem}}
+      .kfc-wx-dayname{font-size:.62rem;font-weight:750;letter-spacing:.3px}
+      .kfc-wx-icon{font-size:1.65rem;line-height:1.3;margin:4px 0 2px}
+      .kfc-wx-high{font-size:.92rem;font-weight:750}
+      .kfc-wx-low{font-size:.65rem;opacity:.72;margin-top:1px}
+      .kfc-wx-loading{grid-column:1/-1;font-size:.60rem;opacity:.65;text-align:center;padding:5px}
+      @media (max-width:780px){.kfc-wx-temp{font-size:2.5rem}.kfc-wx-details{gap:7px;font-size:.52rem}.kfc-wx-forecast{left:18%;width:64%;gap:5px}.kfc-wx-icon{font-size:1.25rem}}
     </style>
     <div class="kfc-shell" id="kfcShell">
       <div id="kfcSkyDiv" aria-hidden="true"></div>
@@ -1558,8 +1558,8 @@ class KhanSkyCard extends HTMLElement {
           <span id="kfcWeatherWind">💨 --</span>
           <span id="kfcWeatherPressure">◉ --</span>
         </div>
-        <div id="kfcWeatherForecast" class="kfc-wx-forecast"></div>
       </div>
+      <div id="kfcWeatherForecast" class="kfc-wx-forecast"></div>
       <div id="kfcBottomGrad" style="position:absolute;top:58%;left:0;right:0;bottom:0;pointer-events:none;z-index:0;border-radius:0 0 14px 14px;transition:background 1.4s ease"></div>
       <div class="kfc-content" style="transform:translateY(-14%)">
       <div class="ct">&#x2014; Energy Flow <span id="battStatusBadge" style="margin-left:auto;font-size:.62rem;font-weight:650;letter-spacing:1.5px;padding:2px 10px;border-radius:8px;background:rgba(0,0,0,.32);color:#a8b4c8;text-transform:uppercase;border:1px solid rgba(255,255,255,.09)">IDLE</span></div>
