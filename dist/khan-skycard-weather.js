@@ -1572,18 +1572,18 @@ try {
       .kfc-weather-panel{position:absolute;top:14px;left:18px;z-index:5;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.80);background:transparent;border:none;border-radius:0;padding:0;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:none}
       .kfc-wx-title{font-size:.65rem;font-weight:750;letter-spacing:1px;text-transform:uppercase;opacity:.95;line-height:1.1;margin-bottom:2px}
       .kfc-wx-current{display:flex;align-items:flex-end;gap:12px;min-height:46px}
-      .kfc-wx-temp{font-size:3.2rem;font-weight:300;line-height:.95;letter-spacing:-2px}
+      .kfc-wx-temp{font-size:3.8rem;font-weight:300;line-height:.95;letter-spacing:-2px}
       .kfc-wx-meta{padding-bottom:4px;min-width:0}
-      .kfc-wx-condition{font-size:.78rem;font-weight:650;white-space:nowrap}
+      .kfc-wx-condition{font-size:1rem;font-weight:650;white-space:nowrap}
       .kfc-wx-minmax{font-size:.62rem;opacity:.75;margin-top:3px}
-      .kfc-wx-details{display:flex;gap:12px;align-items:center;white-space:nowrap;font-size:.62rem;font-weight:600;opacity:.95;margin-top:7px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
-      .kfc-wx-forecast{position:absolute;top:205px;left:205px;width:590px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
-      .kfc-wx-day{text-align:center;min-width:0;padding:9px 5px 8px;background:rgba(15,60,110,.24);border:1px solid rgba(255,255,255,.15);border-radius:11px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
+      .kfc-wx-details{display:flex;gap:14px;align-items:center;white-space:nowrap;font-size:.82rem;font-weight:600;opacity:.95;margin-top:9px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
+      .kfc-wx-forecast{position:absolute;top:245px;left:220px;width:740px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
+      .kfc-wx-day{text-align:center;min-width:0;height:145px;box-sizing:border-box;padding:13px 8px 10px;background:rgba(15,60,110,.18);border:1px solid rgba(255,255,255,.22);border-radius:12px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
       .kfc-wx-day:last-child{border-right:none}
-      .kfc-wx-dayname{font-size:.62rem;font-weight:750;letter-spacing:.3px}
-      .kfc-wx-icon{font-size:1.65rem;line-height:1.3;margin:4px 0 2px}
-      .kfc-wx-high{font-size:.92rem;font-weight:750}
-      .kfc-wx-low{font-size:.65rem;opacity:.72;margin-top:1px}
+      .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
+      .kfc-wx-icon{font-size:2.25rem;line-height:1.3;margin:8px 0 5px}
+      .kfc-wx-high{font-size:1.45rem;font-weight:750;display:inline-block;margin-right:7px}
+      .kfc-wx-low{font-size:.95rem;opacity:.85;display:inline-block;margin-top:2px}
       .kfc-wx-loading{grid-column:1/-1;font-size:.60rem;opacity:.65;text-align:center;padding:5px}
       @media (max-width:780px){.kfc-wx-temp{font-size:2.5rem}.kfc-wx-details{gap:7px;font-size:.52rem}.kfc-wx-forecast{left:18%;width:64%;gap:5px}.kfc-wx-icon{font-size:1.25rem}}
     </style>
