@@ -1577,8 +1577,8 @@ try {
       .kfc-wx-condition{font-size:1rem;font-weight:650;white-space:nowrap}
       .kfc-wx-minmax{font-size:.62rem;opacity:.75;margin-top:3px}
       .kfc-wx-details{display:flex;gap:14px;align-items:center;white-space:nowrap;font-size:.82rem;font-weight:600;opacity:.95;margin-top:9px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
-      .kfc-wx-forecast{position:absolute;top:245px;left:220px;width:740px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
-      .kfc-wx-day{text-align:center;min-width:0;height:145px;box-sizing:border-box;padding:13px 8px 10px;background:rgba(15,60,110,.18);border:1px solid rgba(255,255,255,.22);border-radius:12px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
+      .kfc-wx-forecast{position:absolute;top:225px;left:150px;width:1050px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
+      .kfc-wx-day{text-align:center;min-width:0;height:190px;box-sizing:border-box;padding:16px 8px 12px;background:rgba(15,60,110,.16);border:1px solid rgba(255,255,255,.25);border-radius:14px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
       .kfc-wx-day:last-child{border-right:none}
       .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
       .kfc-wx-icon{font-size:2.25rem;line-height:1.3;margin:8px 0 5px}
