@@ -1577,7 +1577,7 @@ try {
       .kfc-wx-condition{font-size:1rem;font-weight:650;white-space:nowrap}
       .kfc-wx-minmax{font-size:.62rem;opacity:.75;margin-top:3px}
       .kfc-wx-details{display:flex;gap:14px;align-items:center;white-space:nowrap;font-size:.82rem;font-weight:600;opacity:.95;margin-top:9px;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,.9)}
-      .kfc-wx-forecast{position:absolute;top:210px;left:41%;transform:translateX(-50%);width:58%;max-width:620px;min-width:520px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0;padding:0;border:none;z-index:6;pointer-events:none}
+      .kfc-wx-forecast{position:absolute;top:190px;left:0;right:0;width:100%;box-sizing:border-box;padding:0 150px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0;border:none;z-index:6;pointer-events:none}
       .kfc-wx-day{text-align:center;min-width:0;height:145px;box-sizing:border-box;padding:12px 5px 9px;background:rgba(15,60,110,.18);border:1px solid rgba(255,255,255,.24);border-radius:12px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.80)}
       .kfc-wx-day:last-child{border-right:none}
      .kfc-wx-dayname{font-size:.78rem;font-weight:750;letter-spacing:.3px}
@@ -1586,7 +1586,7 @@ try {
      .kfc-wx-high{font-size:1.45rem;font-weight:750;display:inline-block;margin-right:6px}
      .kfc-wx-low{font-size:.9rem;opacity:.85;display:inline-block}
       .kfc-wx-loading{grid-column:1/-1;font-size:.60rem;opacity:.65;text-align:center;padding:5px}
-      @media (max-width:780px){.kfc-wx-temp{font-size:2.5rem}.kfc-wx-details{gap:7px;font-size:.52rem}.kfc-wx-forecast{left:50%;transform:translateX(-50%);width:88%;min-width:0;max-width:none;gap:5px}.kfc-wx-icon{font-size:1.25rem}}
+      @media (max-width:780px){.kfc-wx-temp{font-size:2.5rem}.kfc-wx-details{gap:7px;font-size:.52rem}.kfc-wx-forecast{top:190px;left:0;right:0;width:100%;padding:0 10px;display:grid;grid-template-columns:repeat(5,minmax(72px,1fr));gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}.kfc-wx-forecast::-webkit-scrollbar{display:none}.kfc-wx-day{height:122px;padding:8px 3px 6px}.kfc-wx-dayname{font-size:.58rem}.kfc-wx-icon{font-size:1.25rem;margin:5px 0 3px}.kfc-wx-high{font-size:.95rem;margin-right:3px}.kfc-wx-low{font-size:.65rem}}
     </style>
     <div class="kfc-shell" id="kfcShell">
       <div id="kfcSkyDiv" aria-hidden="true"></div>
