@@ -1587,7 +1587,7 @@ try {
       .kfc-wx-low{font-size:clamp(.60rem,1.3cqw,.9rem);opacity:.85;display:inline-block}
       .kfc-wx-loading{grid-column:1/-1;font-size:.60rem;opacity:.65;text-align:center;padding:5px}
       @container (max-width:700px){.kfc-wx-forecast{width:74cqw;top:clamp(165px,22cqw,190px);gap:5px}.kfc-wx-day{min-height:115px;padding:7px 2px 6px;border-radius:9px}.kfc-wx-dayname{font-size:.55rem}.kfc-wx-icon{font-size:1.25rem;margin:5px 0 3px}.kfc-wx-high{font-size:.92rem;margin-right:2px}.kfc-wx-low{font-size:.58rem}}
-      @container (max-width:480px){.kfc-wx-forecast{width:94cqw;top:170px;gap:3px}.kfc-wx-day{min-height:105px;padding:6px 1px 5px;border-radius:8px}.kfc-wx-dayname{font-size:.50rem}.kfc-wx-icon{font-size:1.05rem;margin:4px 0 3px}.kfc-wx-high{font-size:.82rem;margin-right:1px}.kfc-wx-low{font-size:.52rem}}
+      @container (max-width:480px){.kfc-weather-panel{top:8px;left:10px}.kfc-wx-title{font-size:.48rem;margin-bottom:1px}.kfc-wx-current{gap:5px;min-height:32px}.kfc-wx-temp{font-size:2.1rem;letter-spacing:-1px}.kfc-wx-condition{font-size:.55rem}.kfc-wx-minmax{font-size:.43rem;margin-top:1px}.kfc-wx-details{gap:5px;font-size:.42rem;margin-top:3px}.kfc-wx-forecast{width:94cqw;top:145px;gap:3px}.kfc-wx-day{min-height:78px;height:78px;padding:4px 1px 3px;border-radius:6px;background:rgba(15,60,110,.10)}.kfc-wx-dayname{font-size:.43rem}.kfc-wx-icon{font-size:.88rem;margin:3px 0 2px}.kfc-wx-high{font-size:.68rem;margin-right:1px}.kfc-wx-low{font-size:.45rem}.kfc-wx-loading{font-size:.48rem;padding:2px}}
     </style>
     <div class="kfc-shell" id="kfcShell">
       <div id="kfcSkyDiv" aria-hidden="true"></div>
